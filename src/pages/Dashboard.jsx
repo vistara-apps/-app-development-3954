@@ -1,17 +1,35 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { TrendingUp, Users, DollarSign, Target } from 'lucide-react';
+import EnhancedChart from '../components/EnhancedChart';
+import SkeletonCard from '../components/SkeletonCard';
+import EmptyState from '../components/EmptyState';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { campaigns, influencers, contracts } = useData();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading state
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   if (!user) {
     return (
       <div className="container" style={{ padding: '80px 20px', textAlign: 'center' }}>
-        <h2>Please login to access your dashboard</h2>
+        <EmptyState 
+          type="default"
+          title="Please login to access your dashboard"
+          description="Sign in to view your campaigns, analytics, and influencer data."
+          actionText="Go to Login"
+          onAction={() => window.location.href = '/'}
+        />
       </div>
     );
   }
@@ -64,47 +82,66 @@ const Dashboard = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-2" style={{ marginBottom: '40px' }}>
-          {stats.map((stat, index) => (
-            <div key={index} className="card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <h3 style={{ color: '#666', fontSize: '14px', marginBottom: '8px' }}>{stat.title}</h3>
-                  <p style={{ fontSize: '32px', fontWeight: '700', color: stat.color }}>{stat.value}</p>
-                </div>
-                <div style={{ color: stat.color }}>
-                  {stat.icon}
+          {loading ? (
+            [...Array(4)].map((_, index) => (
+              <SkeletonCard key={index} type="dashboard" />
+            ))
+          ) : (
+            stats.map((stat, index) => (
+              <div key={index} className="card non-interactive">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <h4 className="text-muted text-small font-medium" style={{ marginBottom: '8px' }}>{stat.title}</h4>
+                    <p style={{ fontSize: '2rem', fontWeight: '700', color: stat.color, margin: 0 }}>{stat.value}</p>
+                  </div>
+                  <div style={{ 
+                    color: stat.color,
+                    background: `${stat.color}15`,
+                    padding: '12px',
+                    borderRadius: '12px'
+                  }}>
+                    {stat.icon}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
         {/* Charts */}
         <div className="grid grid-2">
-          <div className="card">
-            <h3 style={{ marginBottom: '24px' }}>Campaign Performance</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={campaignData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="reach" fill="#667eea" />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="card non-interactive">
+            {loading ? (
+              <SkeletonCard type="chart" />
+            ) : (
+              <EnhancedChart
+                data={campaignData}
+                type="bar"
+                dataKey="reach"
+                xAxisKey="name"
+                title="Campaign Performance"
+                loading={loading}
+                color="#667eea"
+                gradientId="reachGradient"
+              />
+            )}
           </div>
 
-          <div className="card">
-            <h3 style={{ marginBottom: '24px' }}>Budget Overview</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={campaignData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="budget" stroke="#764ba2" strokeWidth={3} />
-              </LineChart>
-            </ResponsiveContainer>
+          <div className="card non-interactive">
+            {loading ? (
+              <SkeletonCard type="chart" />
+            ) : (
+              <EnhancedChart
+                data={campaignData}
+                type="area"
+                dataKey="budget"
+                xAxisKey="name"
+                title="Budget Overview"
+                loading={loading}
+                color="#764ba2"
+                gradientId="budgetGradient"
+              />
+            )}
           </div>
         </div>
 

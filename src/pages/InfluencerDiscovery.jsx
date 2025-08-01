@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import { Search, Filter, Instagram, Youtube, Video } from 'lucide-react';
+import SkeletonCard from '../components/SkeletonCard';
+import EmptyState from '../components/EmptyState';
 
 const InfluencerDiscovery = () => {
   const { influencers } = useData();
@@ -8,6 +10,16 @@ const InfluencerDiscovery = () => {
   const [selectedNiche, setSelectedNiche] = useState('');
   const [selectedPlatform, setPlatform] = useState('');
   const [minFollowers, setMinFollowers] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading state
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const niches = ['Fashion', 'Technology', 'Fitness', 'Food', 'Travel', 'Beauty', 'Business'];
   const platforms = ['Instagram', 'YouTube', 'TikTok', 'Twitter'];
@@ -106,63 +118,81 @@ const InfluencerDiscovery = () => {
 
         {/* Influencer Grid */}
         <div className="grid grid-2">
-          {filteredInfluencers.map(influencer => (
-            <div key={influencer.id} className="card">
-              <div className="influencer-profile">
-                <div className="influencer-avatar">
-                  {influencer.avatar}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <h3 style={{ marginBottom: '4px' }}>{influencer.name}</h3>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#666', marginBottom: '8px' }}>
-                    {getPlatformIcon(influencer.platform)}
-                    <span>{influencer.handle}</span>
+          {loading ? (
+            [...Array(6)].map((_, index) => (
+              <SkeletonCard key={index} type="influencer" />
+            ))
+          ) : (
+            filteredInfluencers.map(influencer => (
+              <div key={influencer.id} className="card">
+                <div className="influencer-profile">
+                  <div className="influencer-avatar">
+                    {influencer.avatar}
                   </div>
-                  <div style={{ display: 'flex', gap: '16px', fontSize: '14px' }}>
-                    <span style={{ background: '#e7edff', color: '#667eea', padding: '4px 8px', borderRadius: '4px' }}>
-                      {influencer.niche}
-                    </span>
-                    <span style={{ color: '#666' }}>{influencer.location}</span>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ marginBottom: '4px' }}>{influencer.name}</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      {getPlatformIcon(influencer.platform)}
+                      <span className="text-muted text-small">{influencer.handle}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '16px', fontSize: '14px' }}>
+                      <span style={{ 
+                        background: 'linear-gradient(135deg, #667eea15, #764ba215)', 
+                        color: '#667eea', 
+                        padding: '4px 12px', 
+                        borderRadius: '20px',
+                        fontSize: '12px',
+                        fontWeight: '500'
+                      }}>
+                        {influencer.niche}
+                      </span>
+                      <span className="text-muted text-small">{influencer.location}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="stats-grid">
-                <div className="stat">
-                  <div className="stat-value">{formatNumber(influencer.followers)}</div>
-                  <div className="stat-label">Followers</div>
+                <div className="stats-grid">
+                  <div className="stat">
+                    <div className="stat-value">{formatNumber(influencer.followers)}</div>
+                    <div className="stat-label">Followers</div>
+                  </div>
+                  <div className="stat">
+                    <div className="stat-value">{influencer.engagementRate}%</div>
+                    <div className="stat-label">Engagement</div>
+                  </div>
+                  <div className="stat">
+                    <div className="stat-value">{formatNumber(influencer.avgLikes)}</div>
+                    <div className="stat-label">Avg Likes</div>
+                  </div>
+                  <div className="stat">
+                    <div className="stat-value">{influencer.recentPosts}</div>
+                    <div className="stat-label">Recent Posts</div>
+                  </div>
                 </div>
-                <div className="stat">
-                  <div className="stat-value">{influencer.engagementRate}%</div>
-                  <div className="stat-label">Engagement</div>
-                </div>
-                <div className="stat">
-                  <div className="stat-value">{formatNumber(influencer.avgLikes)}</div>
-                  <div className="stat-label">Avg Likes</div>
-                </div>
-                <div className="stat">
-                  <div className="stat-value">{influencer.recentPosts}</div>
-                  <div className="stat-label">Recent Posts</div>
-                </div>
-              </div>
 
-              <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-                <button className="btn" style={{ flex: 1 }}>
-                  View Profile
-                </button>
-                <button className="btn btn-secondary" style={{ flex: 1 }}>
-                  Add to Campaign
-                </button>
+                <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                  <button className="btn" style={{ flex: 1 }}>
+                    View Profile
+                  </button>
+                  <button className="btn btn-secondary" style={{ flex: 1 }}>
+                    Add to Campaign
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
-        {filteredInfluencers.length === 0 && (
-          <div className="card" style={{ textAlign: 'center', padding: '60px' }}>
-            <h3 style={{ marginBottom: '16px', color: '#666' }}>No influencers found</h3>
-            <p style={{ color: '#999' }}>Try adjusting your search criteria or filters</p>
-          </div>
+        {!loading && filteredInfluencers.length === 0 && (
+          <EmptyState 
+            type="influencers"
+            onAction={() => {
+              setSearchTerm('');
+              setSelectedNiche('');
+              setPlatform('');
+              setMinFollowers('');
+            }}
+          />
         )}
       </div>
     </div>
